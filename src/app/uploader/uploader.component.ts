@@ -2,6 +2,8 @@ import { HttpClient, HttpEventType } from '@angular/common/http';
 import { throwError } from 'rxjs/internal/observable/throwError';
 import { Component, OnInit } from '@angular/core';
 import { interval } from 'rxjs';
+import * as $ from 'jquery';
+
 
 @Component({
   selector: 'app-uploader',
@@ -18,8 +20,13 @@ export class UploaderComponent implements OnInit {
   sendFiles = [];
   interv;
 
+
+  btSend()
+  {
+    $('input[name=file]').click()
+  }
   ngOnInit() {
-    this.interv = interval(1000).subscribe(e => {
+    this.interv = interval(100).subscribe(e => {
 
         let wysylam1 = this.sendFiles.filter(e => e.status == 1).length;
         let wysylam2 = this.sendFiles.filter(e => e.status == 2).length;
@@ -46,7 +53,7 @@ export class UploaderComponent implements OnInit {
     let formData = new FormData();
     formData.append('file', wyslij[0].file);
 
-    this.http.post(this.url, formData, {
+    this.http.post(this.url+"?rn="+wyslij[0].rand, formData, {
       reportProgress: true,
       observe: 'events'
     })
@@ -71,7 +78,22 @@ export class UploaderComponent implements OnInit {
             fileEx[0].progress = prc;
           };
         } else if (events.type === HttpEventType.Response) {
-                 console.log(events);
+
+          let matches = events.url.match(/[0-9]{1,}$/);
+          if(this.sendFiles.filter(e => e.rand == matches[0]))
+          {
+            let send = this.sendFiles.filter(e => e.rand == matches[0]);
+            if(events.status == 200 )
+            {
+                  send[0].status=3;
+                  this.sendFiles =   this.sendFiles.filter(e => e.rand != matches[0])
+            }
+            else  
+            {    
+              send[0].status=4;
+              send[0].stat = events;
+            }
+          }
           //          alert('SUCCESS !!');
         }
 
@@ -90,6 +112,7 @@ export class UploaderComponent implements OnInit {
           progress: 0,
           status: 0, // 0 do wysłania, 1 wysyłam start, 2 wysyłam, 3 koniec ok, 4 koniec nok
           filesize: 0,
+          rand: parseInt(Math.random()*10000000),
           file: val.srcElement.files[i],
           filename: val.srcElement.files[i].name
         });

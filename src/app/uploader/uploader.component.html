@@ -1,0 +1,8 @@
+<div class="uploader">
+
+    <div *ngFor="let file of progressValue"><progress value="file.progress"></progress> {{file.filename}}</div>
+
+  <form method="POST" action="https://newsletter.wsi.edu.pl/testUploadFile"  enctype="multipart/form-data">
+     <input type="file" name="file" (change)="bindings($event)" multiple>
+  </form>
+</div>
